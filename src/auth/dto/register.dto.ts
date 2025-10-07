@@ -17,4 +17,14 @@ export class RegisterDto {
     @IsString()
     @ApiPropertyOptional()
     referral_code?: string;
+
+    @Expose()
+    @IsString()
+    @ApiProperty()
+    firstname: string;
+
+    @Expose()
+    @IsString()
+    @ApiProperty()
+    lastname: string;
 }

@@ -5,7 +5,6 @@ import { ValidationPipe } from '@nestjs/common/pipes/validation.pipe';
 import { PrismaService } from './prisma/prisma.service';
 
 async function bootstrap() {
-  console.log("here1");
   const app = await NestFactory.create(AppModule);
 
   app.useGlobalPipes(
@@ -14,7 +13,7 @@ async function bootstrap() {
     forbidNonWhitelisted: false,
     transform: true,
   }));
-
+ 
 
   const config = new DocumentBuilder()
     .setTitle('Stipendly API')
@@ -52,16 +51,12 @@ async function bootstrap() {
       When a user is successfully registered or logged in, an authentication token is returned in the response.  
       This token must be included in the \`Authorization\` header for all protected endpoints.
     `)
-    .addTag('Users', `
-      This section provides endpoints related to user profile.
-    `)
     .setVersion('1.0')
   .build();
-
+ 
   const prisma = app.get(PrismaService); 
 
   const users = await prisma.user.findMany();
-  //await prisma.user.deleteMany();
   console.log('All users:', users); 
 
 

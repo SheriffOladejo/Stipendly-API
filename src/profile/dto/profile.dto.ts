@@ -1,5 +1,5 @@
-import { Expose } from 'class-transformer';
-import { OptionalString, OptionalEmail, OptionalInt } from 'src/common/decorators/dto.decorator';
+import { Expose, Type } from 'class-transformer';
+import { OptionalString, OptionalDate, OptionalEmail, OptionalInt } from 'src/common/decorators/dto.decorator';
 
 export class ProfileDto {
 
@@ -28,16 +28,25 @@ export class ProfileDto {
     @OptionalString("User's last name")
     last_name?: string;
 
+    @Type(() => Date)
     @Expose()
-    @OptionalInt("Milliseconds since epoch", 1753432503000)
-    dob?: bigint;
+    @OptionalDate("Date of birth")
+    dob?: Date;
 
     @Expose()
     @OptionalString("User's phone number")
-    phone_number?: string;
+    phone_number?: string; 
 
     @Expose()
-    @OptionalString("Bank Verification Number")
+    @OptionalString("Bank Verification Number in bcrypt")
     bvn?: string;
+
+    @Expose()
+    @OptionalString("Username")
+    username?: string;
+
+    @Expose()
+    @OptionalString("Transaction PIN")
+    trx_pin?: string;  
 
 }

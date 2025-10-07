@@ -15,5 +15,5 @@ export function signAndSendError(
 
   const signedError = jwt.sign(errorPayload, secret, { expiresIn });
 
-  return res.status(statusCode).json({ error: signedError });
+  return res.status(statusCode).json({ error: errorPayload });
 }

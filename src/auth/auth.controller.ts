@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Res, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Res, Req, UseGuards, Get, Query } from '@nestjs/common';
 import { Response, Request } from 'express';
 import { AuthGuard } from './auth.guard';
 import { ApiTags } from '@nestjs/swagger';
@@ -12,6 +12,7 @@ import { RegisterDoc } from 'src/common/docs/auth/register.docs';
 import { LoginDoc } from 'src/common/docs/auth/login.docs';
 import { LogoutDoc } from 'src/common/docs/auth/logout.docs';
 import { RefreshTokenDoc } from 'src/common/docs/auth/refresh.docs';
+import * as bcrypt from 'bcrypt';
 
 @ApiTags('Auth')
 @Controller('v1/auth/')
@@ -26,13 +27,9 @@ export class AuthController {
     @Body() body: any
   ) {
     try {
-      const payload = decodeAndValidateToken(body.token, process.env.AUTH_SECRET, RegisterDto);
+      const payload = body;
 
-      const register = await this.authService.register(
-        payload.email,
-        payload.password,
-        payload.referral_code
-      );
+      const register = await this.authService.register(payload);
 
       const responsePayload = {
         message: register.message,
@@ -44,7 +41,7 @@ export class AuthController {
       });
 
       const statusCode = register.code !== 0 ? 400 : 200;
-      return res.status(statusCode).json({ result: token });
+      return res.status(statusCode).json({ result: responsePayload });
     } catch (error) {
       return signAndSendError(res, error, process.env.AUTH_SECRET);
     }
@@ -57,9 +54,9 @@ export class AuthController {
     @Body() body: any
   ) {
     try {
-      const payload = decodeAndValidateToken(body.token, process.env.AUTH_SECRET, LoginDto);
+      const payload = body;
 
-      const login = await this.authService.login(payload.email, payload.password);
+      const login = await this.authService.login(payload);
 
       const responsePayload = {
         message: login.message,
@@ -71,7 +68,7 @@ export class AuthController {
       });
 
       const statusCode = login.code !== 0 ? 400 : 200;
-      return res.status(statusCode).json({ result: token });
+      return res.status(statusCode).json({ result: responsePayload });
     } catch (error) {
       return signAndSendError(res, error, process.env.AUTH_SECRET);
     }
@@ -127,6 +124,60 @@ export class AuthController {
       return signAndSendError(res, error, process.env.AUTH_SECRET);
     }
   }
+
+  @Post('verify-email')
+  async verifyEmail(@Res() res: Response, @Body() body: any) {
+    try {
+      //const payload = decodeAndValidateToken(body.token, process.env.AUTH_SECRET, RegisterDto);
+      const payload = body;
+
+      const result = await this.authService.sendVerificationEmail(
+        payload.email,
+        payload.firstname,
+        payload.lastname,
+        payload.password
+      );
+
+      const responsePayload = {
+        message: result.message,
+      };
+
+      const token = jwt.sign(responsePayload, process.env.AUTH_SECRET, {
+        expiresIn: '1h',
+      });
+
+      const statusCode = result.code !== 0 ? 400 : 200;
+      return res.status(statusCode).json({ result: responsePayload });
+    } catch (error) {
+      return signAndSendError(res, error, process.env.AUTH_SECRET);
+    }
+  }
+
+
+  @Get('confirm-email')
+  async confirmEmail(@Res() res: Response, @Query() query: any) {
+    try {
+      const payload = decodeAndValidateToken(query.token, process.env.AUTH_SECRET, RegisterDto);
+
+      const result = await this.authService.register(payload);
+
+      const statusCode = result.code !== 0 ? 400 : 200;
+      return res.status(statusCode).json({ result: result.message });
+    } catch (error) {
+      return res.status(400).send(`
+      <html>
+        <head><title>Verification Failed</title></head>
+        <body style="font-family: Arial; text-align: center; padding: 40px; color: red;">
+          <h2>❌ Verification failed</h2>
+          <p>${error.message}</p>
+        </body>
+      </html>
+    `);
+    }
+  }
+
+
+
 
 
 }

@@ -1,11 +1,36 @@
 import { applyDecorators } from '@nestjs/common';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsInt, IsEmail } from 'class-validator';
+import { 
+    IsOptional, 
+    IsEnum, 
+    IsDate, 
+    IsObject, 
+    IsString, 
+    IsDecimal, 
+    IsInt, 
+    IsEmail 
+} from 'class-validator';
 
-/**
- * Marks a field as an optional string with Swagger metadata
- */
-export function OptionalString(description?: string) {
+export function OptionalEnum<T extends object>(
+  enumType: T,
+  description?: string,
+  example?: T[keyof T]
+) {
+  return applyDecorators(
+    IsOptional(),
+    IsEnum(enumType, {
+      message: `Value must be one of: ${Object.values(enumType).join(', ')}`,
+    }),
+    ApiPropertyOptional({
+      description,
+      enum: enumType,
+      example,
+    })
+  );
+}
+
+
+export function OptionalString(description?: string, example?: any) {
     return applyDecorators(
         IsOptional(),
         IsString(),
@@ -13,9 +38,14 @@ export function OptionalString(description?: string) {
     );
 }
 
-/**
- * Marks a field as an optional integer with Swagger metadata
- */
+export function OptionalDate(description?: string) {
+    return applyDecorators(
+        IsOptional(),
+        IsDate(),
+        ApiPropertyOptional(description ? { description } : {})
+    );
+}
+
 export function OptionalInt(description?: string, example?: any) {
     return applyDecorators(
         IsOptional(),
@@ -27,9 +57,17 @@ export function OptionalInt(description?: string, example?: any) {
     );
 }
 
-/**
- * Marks a field as an optional email with Swagger metadata
- */
+export function OptionalDecimal(description?: string, example?: any) {
+    return applyDecorators(
+        IsOptional(),
+        IsDecimal(),
+        ApiPropertyOptional({
+            description,
+            example,
+        })
+    );
+}
+
 export function OptionalEmail(description?: string, example?: string) {
     return applyDecorators(
         IsOptional(),
@@ -38,5 +76,13 @@ export function OptionalEmail(description?: string, example?: string) {
             description,
             example,
         })
+    );
+}
+
+export function OptionalJson(description?: string) {
+    return applyDecorators(
+        IsOptional(),
+        IsObject(),
+        ApiPropertyOptional(description ? { description } : {})
     );
 }
